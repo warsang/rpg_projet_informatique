@@ -1,4 +1,7 @@
 #include <SDL/SDL.h>
+#include <SDL/SDL_ttf.h>
+#include <stdbool.h>
+#define NUMMENU 2
 
 typedef struct
 {
@@ -9,6 +12,10 @@ typedef struct
 	char quit;
 } Input;
 
-//void inputDuNom(int* playerHasName);
-void UpdateEvents(Input* in);
+void UpdateEvents(Input* in,SDL_Surface* screen, TTF_Font* font,int* i);
 void InitEvents(Input* in);
+int showmenu (SDL_Surface* screen, TTF_Font* font,FILE* fichierScores);
+int showacceuil (SDL_Surface* screen, TTF_Font* font);
+int showPause (SDL_Surface* screen, TTF_Font* font);
+
+int menuPause(Input * in,SDL_Surface* screen,TTF_Font* font);
