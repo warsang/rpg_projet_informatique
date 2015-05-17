@@ -1,6 +1,7 @@
 #include "fevent.h"
 
-void UpdateEvents(Input* in)
+
+void UpdateEvents(Input* in,SDL_Surface* screen, TTF_Font* font,int* i)
 {
 	SDL_Event event;
 	in->mousebuttons[SDL_BUTTON_WHEELUP] = 0;
@@ -11,6 +12,10 @@ void UpdateEvents(Input* in)
 		{
         case SDL_KEYDOWN:
 			in->key[event.key.keysym.sym]=1;
+            switch(event.key.keysym.sym)
+                case SDLK_p:
+                    *i=showPause(screen,font);
+                break;
 			break;
 		case SDL_KEYUP:
 			in->key[event.key.keysym.sym]=0;
