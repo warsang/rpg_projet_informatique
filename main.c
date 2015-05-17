@@ -1,6 +1,6 @@
 #include "fmap.h"
 #include "fevent.h"
-
+#include <stdbool.h>
 
 #include <SDL/SDL_ttf.h>
 
@@ -15,7 +15,7 @@
 #define SGN(X) (((X)==0)?(0):(((X)<0)?(-1):(1)))
 #define ABS(X) ((((X)<0)?(-(X)):(X)))
 
-#define count_down_time_in_secs 10000
+#define count_down_time_in_secs 20000
 #define TAILLE_BUFFER_SCORES 256
 
 void MoveMap(Map* m,Input* in)
@@ -97,6 +97,7 @@ void RecupererVecteur(Input* in,int* vx,int* vy,SDL_Rect* rcSrc)
             (*rcSrc).x = 64;
         }
     }
+
 }
 
 int EssaiDeplacement(Map* carte,SDL_Rect* perso,int vx,int vy)
@@ -159,17 +160,21 @@ void AfficherPerso(SDL_Rect* perso,SDL_Surface* screen,SDL_Surface* player,int x
 
 int main(int argc,char** argv)
 {
-    SDL_Rect perso,rcSrc,positionTimer, positionGameOver, positionScores,limit;//positionEcranAcceuil,positionEntrezPseudo ;
+    SDL_Rect perso,rcSrc,positionTimer, positionGameOver, positionScores,limit;
     SDL_Surface* screen;
-    SDL_Surface *texteTimer = NULL , *player = NULL, *texteGameOver = NULL, *texteScores = NULL;//*ecranAcceuil=NULL,*entrezPseudo=NULL;
+    SDL_Surface *texteTimer = NULL , *player = NULL, *texteGameOver = NULL, *texteScores = NULL;
     Map* carte;
     Input in;
     int LARGEUR_TILE,HAUTEUR_TILE;
     LARGEUR_TILE = 24;
     HAUTEUR_TILE = 16;
-
+    bool running=true;
+    int tempsSurMenuAcceuil;
 
     int colorkey; //Pour le traitement de transparence sur les images
+
+    /*Menu*/
+    TTF_Font *policeMenu= NULL;
 
     /*Timer*/
     TTF_Font *policeTimer = NULL;
@@ -190,7 +195,7 @@ int main(int argc,char** argv)
     /* High score*/
     int score[1] = {0};
     char scoresBuffer[TAILLE_BUFFER_SCORES];
-    char playerName[10]="Nimportekwa";
+    char playerName[10]="Nimport";
     TTF_Font *policeScores = NULL;
     FILE* fichierScores  = NULL;
     fichierScores=fopen("scores.txt","r+");
@@ -223,9 +228,6 @@ int main(int argc,char** argv)
     /*Load le sprite du joueur*/
     player = LoadImage32("player.bmp");
 
-    /*Load l'ecran d'accueil*/
-   // ecranAcceuil=LoadImage32("accueil.bmp");
-
     /*Choppe la color key et active la RLE (transparence)*/
     colorkey = SDL_MapRGB(screen->format, 255, 0, 255);
     SDL_SetColorKey(player, SDL_SRCCOLORKEY | SDL_RLEACCEL, colorkey);
@@ -238,9 +240,10 @@ int main(int argc,char** argv)
 
     /*Charger la police*/
     policeTimer=TTF_OpenFont("blackcastle.ttf",20);
-    policeGameOver=TTF_OpenFont("keepcalm.ttf",40);
+    policeGameOver=TTF_OpenFont("blackcastle.ttf",40);
     policeScores=TTF_OpenFont("keepcalm.ttf",20);
- //   policeEntrezPseudo=TTF_OpenFont("blackcastle.ttf",40);
+    policeMenu=TTF_OpenFont("blackcastle.ttf",40);
+
 
     /*Initialise la position du timer sur le SDL_Screen*/
     positionTimer.x = 5;
@@ -250,27 +253,20 @@ int main(int argc,char** argv)
     positionGameOver.x = 10 ;
     positionGameOver.y = 80 ;
 
-    /*Initialise la position des Scores sur le SDL_Screen*/
+    int i=showacceuil(screen,policeMenu);
+    tempsSurMenuAcceuil=SDL_GetTicks();
 
-    positionScores.x = 20 ;
-    positionScores.y = 150;
-
-    /*Initialise la position de l'image d'accueil*/
-   // positionEcranAcceuil.x =0;
-    //positionEcranAcceuil.y =0;
-
-    /*Initialise la position du "entrez pseudo"*/
-    //positionEntrezPseudo.x=256;
-    //positionEntrezPseudo.y=256;
-
-    while(!in.key[SDLK_ESCAPE])
+    if(i==1)
     {
-      //  if (playerHasName==1)
-    //{
+        running=false;
+    }
+
+    while( running==true)
+    {
 
             if ( tempsActuel <= count_down_time_in_secs) //Timer non écoulé
             {
-                tempsActuel=SDL_GetTicks();
+                tempsActuel=SDL_GetTicks() - tempsSurMenuAcceuil;
                 snprintf(temps, sizeof(temps), "%d", tempsActuel); // On écrit dans la chaîne "temps" le nouveau temps
                 SDL_FreeSurface(texteTimer); // On supprime la surface précédente de la mémoire avant d'en charger une nouvelle (IMPORTANT)
                 texteTimer = TTF_RenderText_Blended(policeTimer, temps, couleurNoire); // On écrit la chaine temps dans la SDL_Surface
@@ -281,20 +277,24 @@ int main(int argc,char** argv)
                 texteGameOver = TTF_RenderText_Blended(policeGameOver, gameOverBuffer, couleurNoire);
                 gameOver =1;
             }
-            if( (perso.x)==192 && 115<=perso.y<=125 && gameOver !=1 )
+            if( (perso.x)==1000 && 115<=perso.y<=125 && gameOver !=1 )
             {
-                sprintf(gameOverBuffer,"You win");
-                texteGameOver = TTF_RenderText_Blended(policeGameOver, gameOverBuffer, couleurNoire);
+               // sprintf(gameOverBuffer,"You win");
+               // texteGameOver = TTF_RenderText_Blended(policeGameOver, gameOverBuffer, couleurNoire);
                 score[0]=tempsActuel;
-                fprintf(fichierScores,"%s : %d\n",playerName,score[0]);
-                fscanf(fichierScores,scoresBuffer);
-                //fgets(scoresBuffer,sizeof(scoresBuffer),fichierScores);
+                fprintf(fichierScores,"%d",score[0]);
+                //fscanf(fichierScores,"%s",scoresBuffer);
+                fgets(scoresBuffer,sizeof(scoresBuffer),fichierScores);
                 //sprintf(scoresBuffer,"coucou");
                 tempsActuel=count_down_time_in_secs + 1;//Pour éviter de rester dans le if du timer
                 texteScores = TTF_RenderText_Blended(policeScores, scoresBuffer, couleurNoire);
+               i=showmenu(screen,policeMenu,fichierScores);
             }
-
-            UpdateEvents(&in);
+             if(i==1)
+            {
+                running=false;
+            }
+            UpdateEvents(&in,screen,policeMenu,&i);
             MoveMap(carte,&in);
             Evolue(&in,carte,&perso,LARGEUR_TILE,HAUTEUR_TILE,&rcSrc);
             FocusScrollCenter(carte,&perso);
@@ -304,18 +304,11 @@ int main(int argc,char** argv)
             SDL_BlitSurface(texteTimer, NULL, screen, &positionTimer); /* Blit du texte du timer */
             SDL_BlitSurface(texteGameOver,NULL,screen,&positionGameOver);/*Blit du game over*/
             SDL_BlitSurface(texteScores,NULL,screen,&positionScores);/*Blit du score*/
-       // }
-        /*else
-        {
-            SDL_BlitSurface(ecranAcceuil,NULL,screen,&positionEcranAcceuil);
-            entrezPseudo = TTF_RenderText_Blended(policeEntrezPseudo, "Entrez Votre Pseudo", couleurBleue);
-            SDL_BlitSurface(entrezPseudo,NULL,screen,&positionEntrezPseudo);/*Blit du EntrezPseudo*/
-           // inputDuNom(&playerHasName);
-
-        //}
 
         SDL_Flip(screen);
         SDL_Delay(5);
+
+
     }
     LibererMap(carte);
     fclose(fichierScores);
